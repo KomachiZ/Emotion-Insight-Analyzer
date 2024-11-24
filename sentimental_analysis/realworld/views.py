@@ -22,14 +22,17 @@ from .utilityFunctions import *
 from nltk.corpus import stopwords
 from .fb_scrap import *
 from .twitter_scrap import *
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import cv2
 from deepface import DeepFace
 from langdetect import detect
 from spanish_nlp import classifiers
 from textblob import TextBlob
+from snownlp import SnowNLP
 from textblob_fr import PatternTagger, PatternAnalyzer
 from nrclex import NRCLex
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 def pdfparser(data):
     fp = open(data, 'rb')
     rsrcmgr = PDFResourceManager()
@@ -149,7 +152,7 @@ def inputimage(request):
         shutil.copy(path, destination_folder)
         useFile = destination_folder+file.name
         image = cv2.imread(useFile)
-        detected_emotion = DeepFace.analyze(image)
+        detected_emotion = DeepFace.analyze(image,actions=['emotion'])
         
         emotions_dict = {'happy': 0.0, 'sad': 0.0, 'neutral': 0.0}
         for emotion in detected_emotion:
@@ -217,6 +220,7 @@ def textanalysis(request):
         result = {}
         finalText = final_comment
         lang = determine_language(final_comment)
+        print(lang)
         if lang == "en":
             result = detailed_analysis(final_comment)
             result['emotions'] = text_emotion_analysis(' '.join(final_comment))
@@ -241,8 +245,35 @@ def textanalysis(request):
                 result =  {"pos": 0.0, "neg": abs(polarity), "neu": 1 - abs(polarity)}
             else:
                 result = {"pos": 0.0, "neg": 0.0, "neu": 1.0}
+        elif lang == "zh-cn": 
+            text = ' '.join(final_comment)
+     
+            s = SnowNLP(text)
+            sentiment_score = s.sentiments  
+            print(sentiment_score)
+        
+            if sentiment_score > 0.6:
+                result = {
+                    "pos": sentiment_score,
+                    "neg": 0.0,
+                    "neu": 1 - sentiment_score
+                }
+            elif sentiment_score < 0.4:
+                result = {
+                    "pos": 0.0,
+                    "neg": 1 - sentiment_score,
+                    "neu": sentiment_score
+                }
+            else:
+                result = {
+                    "pos": 0.0,
+                    "neg": 0.0,
+                    "neu": 1.0
+                }
+                
         else:
             result = {'error': f'{lang} is not supported yet!'}
+        
         return render(request, 'realworld/results.html', {'sentiment': result, 'text' : finalText})
     else:
         note = "Enter the Text to be analysed!"
