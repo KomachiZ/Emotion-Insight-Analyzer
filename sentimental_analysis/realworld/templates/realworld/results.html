@@ -67,8 +67,15 @@
                <div class="row clearfix" style="padding-bottom: 10px; padding-left: 30px;">
                   <h2 class="section-title">Analyzed Text</h2>
                   <div>
-                     <textarea id="inputText" class="line-edit" rows="4" placeholder="Enter your text here" style="height: 165px"></textarea>
-                  </div>
+                     <label for="inputText" class="form-label">Modify text for reanalysis:</label>
+                     <form id="reanalyzeForm" action="/textanalysis" method="POST">
+                         {% csrf_token %}
+                         <textarea id="inputText" name="textField" class="line-edit" rows="4" style="height: 165px">{{ text }}</textarea>
+                         <button type="submit" style="margin-top: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                             Reanalyze
+                         </button>
+                     </form>
+                 </div>
                </div>
                <div class="row clearfix" style="padding-bottom: 10px; padding-left: 30px; padding-top: 10px;">
                   <h2 class="section-title">Sentiments Distribution</h2>
@@ -260,3 +267,17 @@
       <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
    </body>
 </html>
+
+<script>
+   document.getElementById('reanalyzeButton').addEventListener('click', function (event) {
+      const inputText = document.getElementById('inputText').value;
+      if (inputText.trim() === '') {
+         alert('Please enter some text for reanalysis.');
+         return;
+      }
+      // Replace 'your-reanalysis-url' with the appropriate route name or path for reanalysis
+      const baseUrl = '/textanalysis';
+      const queryString = `?text=${encodeURIComponent(inputText)}`;
+      this.href = baseUrl + queryString;
+   });
+</script>
