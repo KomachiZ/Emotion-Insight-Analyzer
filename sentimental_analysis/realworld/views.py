@@ -76,26 +76,133 @@ def get_clean_text(text):
     textclean = ' '.join(newtokens)
     return textclean
 
-def detailed_analysis(result):
-    result_dict = {}
-    neg_count = 0
-    pos_count = 0
-    neu_count = 0
-    total_count = len(result)
+def detailed_analysis(texts, lang=None):
+    """
+    Multi-language sentiment analysis function
+    Args:
+        texts: List of text segments to analyze
+        lang: Language code (if None, will auto-detect)
+    Returns:
+        Dictionary containing sentiment scores and optional details
+    """
+    if not texts:
+        return {'pos': 0.0, 'neg': 0.0, 'neu': 1.0}
+    
+    # Join text segments
+    text = ' '.join(str(item) for item in texts if item)
+    
+    # Auto-detect language if not specified
+    if not lang:
+        try:
+            lang = detect(text)
+        except Exception as e:
+            print(f"Language detection error: {e}")
+            lang = "en"  # Default to English
+    
+    result = {}
+    
+    try:
+        # English analysis
+        if lang == "en":
+            # Original English analysis logic
+            neg_count = pos_count = neu_count = 0
+            
+            for item in texts:
+                cleantext = get_clean_text(str(item))
+                sentiment = sentiment_scores(cleantext)
+                pos_count += sentiment['pos']
+                neu_count += sentiment['neu']
+                neg_count += sentiment['neg']
+            
+            total = pos_count + neu_count + neg_count
+            if total > 0:
+                result = {
+                    'pos': (pos_count/total),
+                    'neu': (neu_count/total),
+                    'neg': (neg_count/total)
+                }
+                result['emotions'] = text_emotion_analysis(text)
+                
+        # Spanish analysis
+        elif lang == "es":
+            sc = classifiers.SpanishClassifier(model_name="sentiment_analysis")
+            result_classifier = sc.predict(text)
+            result = {
+                'pos': result_classifier.get('positive', 0.0),
+                'neu': result_classifier.get('neutral', 0.0),
+                'neg': result_classifier.get('negative', 0.0)
+            }
+            
+        # French analysis
+        elif lang == "fr":
+            blob = TextBlob(text, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
+            polarity = blob.sentiment[0]
+            
+            if polarity > 0.1:
+                result = {"pos": polarity, "neg": 0.0, "neu": 1 - polarity}
+            elif polarity < -0.1:
+                result = {"pos": 0.0, "neg": abs(polarity), "neu": 1 - abs(polarity)}
+            else:
+                result = {"pos": 0.0, "neg": 0.0, "neu": 1.0}
+                
+        # Chinese analysis
+        elif lang in ["zh", "zh-cn", "zh-tw"]:
+            s = SnowNLP(text)
+            sentiment_score = s.sentiments
+            
+            if sentiment_score > 0.6:
+                result = {
+                    "pos": sentiment_score,
+                    "neg": 0.0,
+                    "neu": 1 - sentiment_score
+                }
+            elif sentiment_score < 0.4:
+                result = {
+                    "pos": 0.0,
+                    "neg": 1 - sentiment_score,
+                    "neu": sentiment_score
+                }
+            else:
+                result = {
+                    "pos": 0.0,
+                    "neg": 0.0,
+                    "neu": 1.0
+                }
+            
+            try:
+                result['details'] = {
+                    'keywords': list(set([word for word in s.words if len(word) > 1]))[:10],
+                    'summary': s.summary(3)
+                }
+            except Exception as e:
+                print(f"Error in Chinese detailed analysis: {e}")
+        
+        # Unsupported language
+        else:
+            result = {'error': f'Language {lang} is not supported yet!'}
+            
+    except Exception as e:
+        print(f"Error in sentiment analysis: {e}")
+        result = {'error': f'Analysis failed: {str(e)}'}
+        
+    return result
 
-    for item in result:
-        cleantext = get_clean_text(str(item))
-        sentiment = sentiment_scores(cleantext)
-        pos_count += sentiment['pos']
-        neu_count += sentiment['neu']
-        neg_count += sentiment['neg']
-
-    total = pos_count + neu_count + neg_count
-    result_dict['pos'] = (pos_count/total)
-    result_dict['neu'] = (neu_count/total)
-    result_dict['neg'] = (neg_count/total)
-
-    return result_dict
+def textanalysis(request):
+    """
+    View function for text analysis
+    """
+    if request.method == 'POST':
+        text_data = request.POST.get("textField", "")
+        final_comment = text_data.split('.')
+        result = detailed_analysis(final_comment)
+        return render(request, 'realworld/results.html', {
+            'sentiment': result, 
+            'text': final_comment
+        })
+    else:
+        return render(request, 'realworld/textanalysis.html', {
+            'note': "Enter the Text to be analysed!"
+        })
 
 def input(request):
     if request.method == 'POST':
@@ -213,72 +320,6 @@ def text_emotion_analysis(text):
         emotion_counts[emotion] = emotion_counts.get(emotion, 0) + score
     return emotion_counts
 
-def textanalysis(request):
-    if request.method == 'POST':
-        text_data = request.POST.get("textField", "")
-        final_comment = text_data.split('.')
-        result = {}
-        finalText = final_comment
-        lang = determine_language(final_comment)
-        print(lang)
-        if lang == "en":
-            result = detailed_analysis(final_comment)
-            result['emotions'] = text_emotion_analysis(' '.join(final_comment))
-        elif lang == "es":
-            sc = classifiers.SpanishClassifier(model_name="sentiment_analysis")
-            result_string = ' '.join(final_comment)
-            result_classifier = sc.predict(result_string)
-            result = {
-                'pos': result_classifier.get('positive', 0.0),
-                'neu': result_classifier.get('neutral', 0.0),
-                'neg': result_classifier.get('negative', 0.0)
-            }
-        elif lang == "fr":
-            text = ' '.join(final_comment)
-            blob = TextBlob(text, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
-            polarity = blob.sentiment[0]
-            
-            # Estimate separate scores
-            if polarity > 0.1:
-                result =  {"pos": polarity, "neg": 0.0, "neu": 1 - polarity}
-            elif polarity < -0.1:
-                result =  {"pos": 0.0, "neg": abs(polarity), "neu": 1 - abs(polarity)}
-            else:
-                result = {"pos": 0.0, "neg": 0.0, "neu": 1.0}
-        elif lang == "zh-cn": 
-            text = ' '.join(final_comment)
-     
-            s = SnowNLP(text)
-            sentiment_score = s.sentiments  
-            print(sentiment_score)
-        
-            if sentiment_score > 0.6:
-                result = {
-                    "pos": sentiment_score,
-                    "neg": 0.0,
-                    "neu": 1 - sentiment_score
-                }
-            elif sentiment_score < 0.4:
-                result = {
-                    "pos": 0.0,
-                    "neg": 1 - sentiment_score,
-                    "neu": sentiment_score
-                }
-            else:
-                result = {
-                    "pos": 0.0,
-                    "neg": 0.0,
-                    "neu": 1.0
-                }
-                
-        else:
-            result = {'error': f'{lang} is not supported yet!'}
-        
-        return render(request, 'realworld/results.html', {'sentiment': result, 'text' : finalText})
-    else:
-        note = "Enter the Text to be analysed!"
-        return render(request, 'realworld/textanalysis.html', {'note': note})
-    
 def determine_language(texts):
     langs = []
     try:
