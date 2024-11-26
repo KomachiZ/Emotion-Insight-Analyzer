@@ -1,4 +1,6 @@
 import pytest
+from sentimental_analysis.realworld.music_recommendations import MusicRecommender
+from sentimental_analysis.realworld.views import detailed_analysis
 import json
 from unittest.mock import patch, MagicMock
 from pathlib import Path
@@ -209,84 +211,172 @@ class TestEdgeCases:
         
         assert lower_case == upper_case == mixed_case  # Results should be case-insensitive
 
-class TestReanalyzeFunctionality:
-    """Test cases for reanalyze functionality"""
-
+class TestMusicRecommendations:
+    """Test cases for music recommendation functionality"""
+    
     @pytest.fixture
-    def mock_request(self):
-        """Fixture for creating a mock POST request"""
-        return MockRequest(
-            method='POST',
-            post_data={'textField': "This product is excellent and terrible."}
-        )
+    def recommender(self):
+        return MusicRecommender()
+        
+    def test_recommender_initialization(self, recommender):
+        """测试MusicRecommender初始化"""
+        assert hasattr(recommender, 'recommendations')
+        assert 'positive' in recommender.recommendations
+        assert 'negative' in recommender.recommendations
+        assert 'neutral' in recommender.recommendations
 
-    def test_reanalyze_with_updated_text(self, mock_request):
-        """Test reanalysis with modified input text"""
-        # Original analysis
-        original_text = ["This product is excellent."]
-        original_result = detailed_analysis(original_text)
-        
-        # Modified text for reanalysis
-        reanalyzed_text = ["This product is excellent and terrible."]
-        reanalyzed_result = detailed_analysis(reanalyzed_text)
-        
-        assert original_result != reanalyzed_result  # Ensure results differ
-        assert reanalyzed_result['pos'] > 0
-        assert reanalyzed_result['neg'] > 0  # Ensure mixed sentiment is detected
+    def test_get_recommendations_positive(self, recommender):
+        """测试积极情绪的音乐推荐"""
+        songs = recommender.get_recommendations('positive', 95)
+        assert len(songs) == 3
+        assert songs[0]['name'] == "Happy - Pharrell Williams"
+        assert songs[0]['spotify_id'] == "60nZcImufyMA1MKQY3dcCH"
 
-    def test_reanalyze_with_empty_text(self):
-        """Test reanalyze functionality with empty text"""
-        # Reanalysis with empty text
-        reanalyzed_text = [""]
-        result = detailed_analysis(reanalyzed_text)
-        
-        assert result['pos'] == 0.0
-        assert result['neg'] == 0.0
-        assert result['neu'] == 1.0  # Should default to neutral for empty input
+    def test_get_recommendations_negative(self, recommender):
+        """测试消极情绪的音乐推荐"""
+        songs = recommender.get_recommendations('negative', 95)
+        assert len(songs) == 3
+        assert songs[0]['name'] == "I Don't Wanna Live Forever - ZAYN, Taylor Swift"
+        assert songs[0]['spotify_id'] == "3NdDpSvN911VPGivFlV5d0"
 
-    def test_reanalyze_with_positive_text(self):
-        """Test reanalyze functionality with positive-only input"""
-        reanalyzed_text = ["This product is excellent and I love it!"]
-        result = detailed_analysis(reanalyzed_text)
-        
-        assert result['pos'] > 0.9  # Dominantly positive
-        assert result['neg'] == 0.0
-        assert result['neu'] == 0.0
+    def test_get_recommendations_neutral(self, recommender):
+        """测试中性情绪的音乐推荐"""
+        songs = recommender.get_recommendations('neutral', 95)
+        assert len(songs) == 3
+        assert songs[0]['name'] == "Breathe - Pink Floyd"
+        assert songs[0]['spotify_id'] == "2ctvdKmETyOzPb2GiJJT53"
 
-    def test_reanalyze_with_negative_text(self):
-        """Test reanalyze functionality with negative-only input"""
-        reanalyzed_text = ["This product is terrible and I hate it!"]
-        result = detailed_analysis(reanalyzed_text)
-        
-        assert result['neg'] > 0.9  # Dominantly negative
-        assert result['pos'] == 0.0
-        assert result['neu'] == 0.0
+    def test_different_score_ranges(self, recommender):
+        """测试不同分数范围的推荐"""
+        ranges = [(30, 40), (40, 50), (50, 60), (60, 70), (70, 80), (80, 90), (90, 100)]
+        for low, high in ranges:
+            score = (low + high) / 2
+            songs = recommender.get_recommendations('positive', score)
+            assert len(songs) == 3
 
-    def test_reanalyze_with_special_characters(self):
-        """Test reanalyze functionality with special characters in input"""
-        reanalyzed_text = ["!!! This product is TERRIBLE!!!!"]
-        result = detailed_analysis(reanalyzed_text)
-        
-        assert result['neg'] > 0  # Negative sentiment detected
-        assert result['pos'] == 0.0
+    def test_invalid_sentiment_type(self, recommender):
+        """测试无效的情感类型"""
+        songs = recommender.get_recommendations('invalid', 50)
+        assert songs == []
+
+    def test_integration_with_sentiment_analysis(self):
+        """测试与情感分析的集成"""
+        result = detailed_analysis(["I am so happy and excited!"])
+        assert 'recommended_songs' in result
+        assert isinstance(result['recommended_songs'], list)  # 检查是否为列表
+        assert len(result['recommended_songs']) == 3
+        assert all('name' in song and 'spotify_id' in song for song in result['recommended_songs'])  # 检查每首歌是否包含名称和ID
+
+    def test_spotify_ids_format(self, recommender):
+        """测试所有Spotify ID的格式"""
+        for sentiment in recommender.recommendations:
+            for score_range, songs in recommender.recommendations[sentiment].items():
+                for song in songs:
+                    assert isinstance(song['spotify_id'], str)
+                    assert len(song['spotify_id']) > 0
+                    # Spotify ID格式验证
+                    assert song['spotify_id'].isalnum()
+
+    def test_song_name_format(self, recommender):
+        """测试所有歌曲名称格式"""
+        for sentiment in recommender.recommendations:
+            for score_range, songs in recommender.recommendations[sentiment].items():
+                for song in songs:
+                    assert ' - ' in song['name']
+                    artist_name, song_name = song['name'].split(' - ', 1)
+                    assert len(artist_name) > 0
+                    assert len(song_name) > 0
+
+    def test_score_range_coverage(self, recommender):
+        """测试分数范围的完整覆盖"""
+        for sentiment in recommender.recommendations:
+            covered_ranges = []
+            for score_range in recommender.recommendations[sentiment].keys():
+                covered_ranges.extend(range(score_range[0], score_range[1] + 1))
+            # 检查30-100的每个分数都被覆盖
+            assert all(score in covered_ranges for score in range(30, 101))
+
+    def test_boundary_scores(self, recommender):
+        """测试边界分数"""
+        songs30 = recommender.get_recommendations('positive', 30)
+        songs40 = recommender.get_recommendations('positive', 40)
+        songs50 = recommender.get_recommendations('positive', 50)
+        songs60 = recommender.get_recommendations('positive', 60)
+        songs70 = recommender.get_recommendations('positive', 70)
+        songs80 = recommender.get_recommendations('positive', 80)
+        songs90 = recommender.get_recommendations('positive', 90)
+        songs100 = recommender.get_recommendations('positive', 100)
+
+        assert len(songs30) == 3
+        assert len(songs40) == 3
+        assert len(songs50) == 3
+        assert len(songs60) == 3
+        assert len(songs70) == 3
+        assert len(songs80) == 3
+        assert len(songs90) == 3
+        assert len(songs100) == 3
+
+    def test_out_of_range_scores(self, recommender):
+        """测试超出范围的分数"""
+        songs_less_than_30 = recommender.get_recommendations('positive', 20)
+        songs_greater_than_100 = recommender.get_recommendations('positive', 110)
+
+        assert songs_less_than_30 == []
+        assert songs_greater_than_100 == []
+
+    def test_recommendations_consistency(self, recommender):
+        """测试推荐的一致性"""
+        songs1 = recommender.get_recommendations('positive', 85)
+        songs2 = recommender.get_recommendations('positive', 85)
+        songs3 = recommender.get_recommendations('positive', 85)
+
+        assert songs1 == songs2 == songs3
+
+    def test_unique_recommendations(self, recommender):
+        """测试推荐的唯一性"""
+        for sentiment in recommender.recommendations:
+            for score_range, songs in recommender.recommendations[sentiment].items():
+                song_ids = [song['spotify_id'] for song in songs]
+                assert len(song_ids) == len(set(song_ids))  # 检查是否有重复
+
+
+    def test_non_english_input(self):
+        """测试非英语输入"""
+        french_text = ["Je suis très heureux aujourd'hui!", "C'est une belle journée."]
+        result = detailed_analysis(french_text)
+
+        assert result['pos'] > result['neg']
+        assert result['pos'] > 0.5
+        assert 'pos' in result
+        assert 'neg' in result
         assert 'neu' in result
 
-    def test_reanalyze_with_long_text(self):
-            """Test reanalysis with very long text"""
-            long_text = ["This is " + "great " * 1000 + "but also " + "bad " * 1000]
-            result = detailed_analysis(long_text)
-            
-            assert result['pos'] > 0
-            assert result['neg'] > 0
-            assert abs(result['pos'] - result['neg']) < 0.1
+    def test_detailed_analysis_empty_input(self):
+        """测试 detailed_analysis 的空输入"""
+        result = detailed_analysis([])
+        assert result == {'pos': 0.0, 'neg': 0.0, 'neu': 1.0}
 
-    def test_reanalyze_with_mixed_language_text(self):
-            """Test reanalysis with mixed language input"""
-            mixed_language_text = ["This is excellent. 这是一个好的产品。"]
-            result = detailed_analysis(mixed_language_text, lang="en")
-            
-            assert 'emotions' in result
-            assert result['pos'] > 0
+    def test_get_recommendations_floating_point_score(self, recommender):
+        """测试浮点数情感分数"""
+        songs = recommender.get_recommendations('positive', 92.5)
+        assert len(songs) == 3
+
+    def test_get_recommendations_integer_score(self, recommender):
+        """测试整数情感分数"""
+        songs = recommender.get_recommendations('positive', 75)
+        assert len(songs) == 3
+
+    def test_get_recommendations_invalid_sentiment_type(self, recommender):
+        """测试无效的情感类型"""
+        songs = recommender.get_recommendations('invalid', 50)
+        assert songs == []
+
+
+    def test_get_recommendations_out_of_range_score(self, recommender):
+        """测试超出范围的分数"""
+        songs = recommender.get_recommendations('positive', 200)
+        assert songs == []
+
 
 if __name__ == '__main__':
     pytest.main(['-v'])

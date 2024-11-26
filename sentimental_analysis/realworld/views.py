@@ -33,6 +33,8 @@ from snownlp import SnowNLP
 from textblob_fr import PatternTagger, PatternAnalyzer
 from nrclex import NRCLex
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+from .music_recommendations import MusicRecommender
 def pdfparser(data):
     fp = open(data, 'rb')
     rsrcmgr = PDFResourceManager()
@@ -122,6 +124,64 @@ def detailed_analysis(texts, lang=None):
                     'neg': (neg_count/total)
                 }
                 result['emotions'] = text_emotion_analysis(text)
+                # # 找出主要情感
+                # sentiment_type = max(('pos', result['pos']), ('neg', result['neg']), ('neu', result['neu']), key=lambda x: x[1])[0]
+                # sentiment_score = result[sentiment_type]
+
+                # print(f"Main sentiment: {sentiment_type}, score: {sentiment_score}")
+
+                # # 将 'neu' 映射为 'neutral'
+                # sentiment_mapping = {
+                #     'pos': 'positive',
+                #     'neg': 'negative',
+                #     'neu': 'neutral'
+                # }
+
+                # mapped_sentiment = sentiment_mapping[sentiment_type]
+
+                # # 获取音乐推荐
+                # recommender = MusicRecommender()
+                # recommended_songs = recommender.get_recommendations(mapped_sentiment, sentiment_score * 100)
+
+                # # 添加到结果中
+                # result['recommended_songs'] = recommended_songs
+                # result['main_sentiment'] = {
+                #     'type': mapped_sentiment,  # 使用映射后的类型
+                #     'score': sentiment_score * 100
+                # }
+                # print(result)
+                 # 找出主要情感
+                sentiment_type = max(('pos', result['pos']), ('neg', result['neg']), ('neu', result['neu']), key=lambda x: x[1])[0]
+                sentiment_score = result[sentiment_type]
+
+                print(f"Main sentiment: {sentiment_type}, score: {sentiment_score}")
+
+                # 将 'neu' 映射为 'neutral'
+                sentiment_mapping = {
+                    'pos': 'positive',
+                    'neg': 'negative',
+                    'neu': 'neutral'
+                }
+
+                mapped_sentiment = sentiment_mapping[sentiment_type]
+
+                # 获取音乐推荐
+                recommender = MusicRecommender()
+                recommended_songs = recommender.get_recommendations(mapped_sentiment, sentiment_score * 100)
+                
+                # Debug输出
+                print(f"Recommended songs structure: {recommended_songs}")
+
+                # 添加到结果中
+                result['recommended_songs'] = recommended_songs  # 现在这是一个字典列表，每个字典包含 name 和 spotify_id
+                result['main_sentiment'] = {
+                    'type': mapped_sentiment,
+                    'score': sentiment_score * 100
+                }
+                
+                print("Final result structure:", result)
+
+
                 
         # Spanish analysis
         elif lang == "es":
@@ -511,6 +571,12 @@ def sentiment_analyzer_scores(sentence):
     return score
 
 
+# @register.filter(name='get_item')
+# def get_item(dictionary, key):
+#     return dictionary.get(key, 0)
+# 修改模板过滤器，以支持获取推荐列表
 @register.filter(name='get_item')
 def get_item(dictionary, key):
-    return dictionary.get(key, 0)
+    if isinstance(dictionary, dict):
+        return dictionary.get(key, [])
+    return []
