@@ -209,5 +209,84 @@ class TestEdgeCases:
         
         assert lower_case == upper_case == mixed_case  # Results should be case-insensitive
 
+class TestReanalyzeFunctionality:
+    """Test cases for reanalyze functionality"""
+
+    @pytest.fixture
+    def mock_request(self):
+        """Fixture for creating a mock POST request"""
+        return MockRequest(
+            method='POST',
+            post_data={'textField': "This product is excellent and terrible."}
+        )
+
+    def test_reanalyze_with_updated_text(self, mock_request):
+        """Test reanalysis with modified input text"""
+        # Original analysis
+        original_text = ["This product is excellent."]
+        original_result = detailed_analysis(original_text)
+        
+        # Modified text for reanalysis
+        reanalyzed_text = ["This product is excellent and terrible."]
+        reanalyzed_result = detailed_analysis(reanalyzed_text)
+        
+        assert original_result != reanalyzed_result  # Ensure results differ
+        assert reanalyzed_result['pos'] > 0
+        assert reanalyzed_result['neg'] > 0  # Ensure mixed sentiment is detected
+
+    def test_reanalyze_with_empty_text(self):
+        """Test reanalyze functionality with empty text"""
+        # Reanalysis with empty text
+        reanalyzed_text = [""]
+        result = detailed_analysis(reanalyzed_text)
+        
+        assert result['pos'] == 0.0
+        assert result['neg'] == 0.0
+        assert result['neu'] == 1.0  # Should default to neutral for empty input
+
+    def test_reanalyze_with_positive_text(self):
+        """Test reanalyze functionality with positive-only input"""
+        reanalyzed_text = ["This product is excellent and I love it!"]
+        result = detailed_analysis(reanalyzed_text)
+        
+        assert result['pos'] > 0.9  # Dominantly positive
+        assert result['neg'] == 0.0
+        assert result['neu'] == 0.0
+
+    def test_reanalyze_with_negative_text(self):
+        """Test reanalyze functionality with negative-only input"""
+        reanalyzed_text = ["This product is terrible and I hate it!"]
+        result = detailed_analysis(reanalyzed_text)
+        
+        assert result['neg'] > 0.9  # Dominantly negative
+        assert result['pos'] == 0.0
+        assert result['neu'] == 0.0
+
+    def test_reanalyze_with_special_characters(self):
+        """Test reanalyze functionality with special characters in input"""
+        reanalyzed_text = ["!!! This product is TERRIBLE!!!!"]
+        result = detailed_analysis(reanalyzed_text)
+        
+        assert result['neg'] > 0  # Negative sentiment detected
+        assert result['pos'] == 0.0
+        assert 'neu' in result
+
+    def test_reanalyze_with_long_text(self):
+            """Test reanalysis with very long text"""
+            long_text = ["This is " + "great " * 1000 + "but also " + "bad " * 1000]
+            result = detailed_analysis(long_text)
+            
+            assert result['pos'] > 0
+            assert result['neg'] > 0
+            assert abs(result['pos'] - result['neg']) < 0.1
+
+    def test_reanalyze_with_mixed_language_text(self):
+            """Test reanalysis with mixed language input"""
+            mixed_language_text = ["This is excellent. 这是一个好的产品。"]
+            result = detailed_analysis(mixed_language_text, lang="en")
+            
+            assert 'emotions' in result
+            assert result['pos'] > 0
+
 if __name__ == '__main__':
     pytest.main(['-v'])
