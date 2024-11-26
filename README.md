@@ -173,6 +173,6 @@ To Contribute to our application, please refer to [CONTRIBUTING.md](https://gith
 <a name="team"></a>
 ## Team Members
 
-- Ajith Kanumuri
-- Suhas Adidela
-- Venkata Krishna Mangapuram
+- Yumo Shen
+- Jiewen Liu
+- Haojie Zhou

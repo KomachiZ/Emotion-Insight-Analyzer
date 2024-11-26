@@ -44,7 +44,7 @@ jobs:
       run: |
         pip install pytest
         pip install pytest-cov
-        pytest test --cov=./ --cov-report=xml
+        pytest ./Emotion-Insight-Analyzer/sentimental_analysis/realworld/test_textanalysis.py
     # - name: Upload coverage to Codecov
     #   uses: codecov/codecov-action@v2
     #   env:
