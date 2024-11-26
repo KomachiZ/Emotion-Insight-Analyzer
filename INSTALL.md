@@ -39,4 +39,4 @@ Next, open your browser and type in the host:port(eg. localhost:8000) in the sea
 ---
 
 
-You're all set! Enjoy tracking your expenses with DollarBot.
+You're all set! Enjoy Emotion Insight Analyzer.
