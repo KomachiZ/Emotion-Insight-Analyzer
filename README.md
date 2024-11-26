@@ -14,6 +14,9 @@
 [![GitHub-size](https://img.shields.io/github/languages/code-size/Fall24-SE-ASK/Emotion-Insight-Analyzer)](https://github.com/Fall24-SE-ASK/Emotion-Insight-Analyzer)
 [![github workflow](https://github.com/Fall24-SE-ASK/Emotion-Insight-Analyzer/actions/workflows/code_coverage.yml/badge.svg)](https://github.com/Fall24-SE-ASK/Emotion-Insight-Analyzer/actions/workflows/code_coverage.yml)
 [![codecov](https://codecov.io/gh/KomachiZ/Emotion-Insight-Analyzer/graph/badge.svg?token=C7UXHPFCLZ)](https://codecov.io/gh/KomachiZ/Emotion-Insight-Analyzer)
+[![Flake8](https://img.shields.io/badge/lint-flake8-blue)](https://github.com/Fall24-SE-ASK/Emotion-Insight-Analyzer/actions/workflows/main.yml)
+[![PyLint](https://img.shields.io/badge/pylint-9.5%2F10-orange)](https://github.com/Fall24-SE-ASK/Emotion-Insight-Analyzer/actions/workflows/main.yml)
+[![Bandit](https://img.shields.io/badge/bandit-passing-brightgreen)](https://github.com/Fall24-SE-ASK/Emotion-Insight-Analyzer/actions/workflows/main.yml)
 ---
 The Emotion Insight Analyzer is a versatile tool that can perform sentiment analysis on different types of data, including text, audio, reviews, and news articles. Sentiment analysis is one of the fastest-growing research areas in computer science, making it challenging to keep track of all the activities in the area. In our project, we aim to achieve our goal of accurately predicting a user's sentiment by analyzing the data provided using different types of input data.
 
