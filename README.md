@@ -84,6 +84,7 @@ Although HTML and CSS are used for the front end, the users can merge the backen
 |Feature|Description  |
 |--|--|
 |Product Analysis |```Sentimental analysis of Amazon product reviews```|
+|Image Analysis |```Sentimental analysis of human image upload```|
 |News Analysis  |```Sentimental analysis of any recent news topic```|
 |Text Analysis | ```Sentimental analysis and emotion analysis of text input```|
 |Audio Analysis   |``` Sentimental analysis of audio file``` |
@@ -147,19 +148,21 @@ Now, you are good to go.
 - [x] Facebook post Analysis using Deep Learning Feature inclusion
 - [x] Twitter post Feature inclusion
 - [x] Text analysis for Spanish language inclusion
+- [x] Text analysis for French language inclusion
+- [x] Emotion detection for English text
 
 ### Current Achievements
-☑️  Text analysis for French language inclusion<br>
-☑️  Emotion detection for English text<br>
-☑️  UI Improvement for enriching User interaction with the Application<br>
-☑️  Documentation Improvement for reflecting project's value accurately<br>
-☑️  Addition of Builds and Workflows for better development activities<br>
+☑️  Text analysis for Chinese language inclusion<br>
+☑️  Emotion detection for English, Spanish, French, and Chinese text<br>
+☑️  Image analyze functionality fixed<br>
+☑️  Music recommendations based on analyzed results<br>
+☑️  Frontend improvements<be>
 
 ### Future Scope
-- [ ] Implement User Authentication to store the history of each User
-- [ ] Recommendation System based on Product Analysis Results 
-- [ ] Enhance the Product Analysis by considering the number of users rated for each Product!
-- [ ] Add support for more languages in text analysis!
+- [ ] Allow analysis from Instagram posts, similar to Facebook and Twitter
+- [ ] Optimize Product Analysis functionalities to match up with the new Amazon website layout
+- [ ] Reconstruct the project. Make it more user-friendly for future coders
+- [ ] Add support for more languages in text analysis
       
 ---  
 <a name="casestudy"></a>
