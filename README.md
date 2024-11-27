@@ -22,7 +22,9 @@ The Emotion Insight Analyzer is a versatile tool that can perform sentiment anal
 
 ## Working Demo
 
-[![Working Demo Video](https://img.youtube.com/vi/EVJx20iVmuI/0.jpg)](https://www.youtube.com/watch?v=EVJx20iVmuI)
+[![Working Demo Video](https://img.youtube.com/vi/EVJx20iVmuI/0.jpg)](https://www.youtube.com/watch?v=EVJx20iVmuI)  
+
+[![New Feature team4 project3 Demo Video](https://youtu.be/OVYc-s-Z8bA)](https://youtu.be/OVYc-s-Z8bA)
 
 
 ---
@@ -93,6 +95,34 @@ Although HTML and CSS are used for the front end, the users can merge the backen
 |Facebook Post Analysis   |``` Sentimental analysis of Facebook Post``` |
 |Twitter Post Analysis   |``` Sentimental analysis of Twitter Post``` |
 ---
+
+## New Features we add
+1. Image analysis
+   
+"Image analyze" involves uploading a frontal portrait of a person. This system will analyze and show relevant emotions.
+![My Video](https://github.com/user-attachments/assets/b055ac4c-9518-42f0-9374-21474b1546bf)
+
+2. Music Recommandation
+   
+Recommend music to play directly based on the detected emotion.
+![My Video-1](https://github.com/user-attachments/assets/2f6e2b5e-8712-4a74-8b7a-d4434aec5e5a)
+
+3. Multilingual - Chinese text analysis
+   
+Now can input Chinese text to text analyzer instead of only English.
+![My Video-2](https://github.com/user-attachments/assets/c072233c-7495-4025-8d08-105bea328e53)
+
+4. Multilingual - Chinese document analysis
+   
+Now can input Chinese document to document analyzer instead of only English.
+![My Video-3](https://github.com/user-attachments/assets/f69eae4b-b66a-4d0f-af47-e8664b3c4340)
+
+5. Reanalyzer
+    
+Now can use the reanalyzer button to analyze something new in the result page, instead of starting over.
+![My Video-4](https://github.com/user-attachments/assets/0a1c150b-a776-452b-9160-3b6483d22230)
+
+
 
 <a name="exec"></a>
 ## How to use Emotion Insight Analyzer?
