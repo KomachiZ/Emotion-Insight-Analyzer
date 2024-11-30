@@ -45,6 +45,8 @@ w3lib==1.22.0
 zope.interface==5.1.0
 scrapeops-scrapy==0.5.3
 scrapeops-scrapy-proxy-sdk==1.0
+numpy==1.26.0
+scikit-learn
 pylint==3.0.1
 pytest==7.4.2
 pydub==0.25.1
@@ -54,3 +56,11 @@ wordcloud==1.9.2
 opencv-python==4.8.1.78
 deepface
 langdetect
+tf-keras
+spanish_nlp
+textblob
+textblob-fr
+snownlp
+NRCLex
+
+
