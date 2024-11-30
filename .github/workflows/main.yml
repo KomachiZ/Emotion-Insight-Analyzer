@@ -3,7 +3,7 @@
 name: Build
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+# events but only for the project3 or develop branches
 on:
   push:
     branches: [ project3, develop ]
@@ -33,28 +33,13 @@ jobs:
       run: |
         pylint --exit-zero Amazon_Comments_Scrapper
         pylint --exit-zero sentimental_analysis
-    - name: Test with pytest
+    
+    - name: Test with pytest and coverage for a specific file
       run: |
-        pytest test
-    # - name: Run tests and collect coverage
-    #   run: |
-    #     (sleep 2; python3 -m pytest test/tests.py) & (coverage run --source=./src -m pytest src/bot.py )
-    #     coverage xml
-    - name: Test with pytest
-      run: |
-        pip install coverage
-        pip install pytest
-        coverage run -m pytest sentimental_analysis/realworld/test_textanalysis.py
+        pip install coverage pytest pytest-cov
+        pytest --cov=sentimental_analysis --cov-report=xml sentimental_analysis/realworld/test_textanalysis.py
+        
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-    # - name: Upload coverage to Codecov
-    #   uses: codecov/codecov-action@v2
-    #   env:
-    #     CODECOV_TOKEN: b441c10b-537e-47cc-90d8-653310cdfec3
-    #   with:
-    #     directory: ./test
-    #     fail_ci_if_error: true
-    #     files: ./coverage1.xml,./coverage2.xml,!./cache
-      
